@@ -1,0 +1,48 @@
+CALANGO EMULATOR v1.0 - COMO JOGAR
+==================================
+
+1. Extraia esta pasta inteira para onde quiser (por exemplo, Documentos\Calango-Emulator).
+   Não rode de dentro do .zip.
+
+2. Abra calango.exe.
+   Se o Windows mostrar "O Windows protegeu o computador", clique em "Mais informações" e
+   depois em "Executar assim mesmo" (o programa não tem assinatura digital paga).
+
+3. Clique duas vezes no calango (ou em "+ Adicionar jogos") e escolha a pasta do seu jogo.
+
+4. Clique duas vezes no jogo para jogar.
+
+Tudo já vem configurado para o melhor desempenho: FSR com Native AA, geração de quadros
+embutida, filtro 16x e FPS sem trava. Não precisa mexer em nada.
+
+
+PRIMEIRA VEZ QUE ABRE UM JOGO
+-----------------------------
+Na primeira vez, o emulador monta os shaders da sua placa de vídeo ("Building shaders").
+Isso acontece uma vez só. Pode demorar bastante; o botão Skip começa o jogo na hora e o resto
+continua sendo montado enquanto você joga (pode haver pequenas travadas no começo).
+
+
+REQUISITOS
+----------
+- Windows 10 ou 11, 64 bits
+- Placa de vídeo com Vulkan 1.3 (feito para AMD Radeon; NVIDIA e Intel também funcionam)
+- 16 GB de RAM; deixe a memória virtual do Windows "gerenciada pelo sistema"
+- Driver de vídeo atualizado
+
+
+CONTROLE
+--------
+Controles de Xbox, PlayStation e Switch são reconhecidos. Para mudar os botões:
+Emulation > Configure > Controls.
+
+
+SE ALGO DER ERRADO
+------------------
+- A pasta "user" (criada ao lado do calango.exe) guarda configurações, saves e shaders.
+- Para voltar ao padrão: feche o emulador e apague user\config.
+- Detalhes técnicos (em inglês): README.txt e CALANGO.md.
+
+Calango Emulator é software livre (GNU GPL v3, veja LICENSE.txt). Código-fonte:
+https://github.com/oliveirajoaocontato1-maker/Calango-Emulator
+Créditos dos projetos em que ele se baseia: NOTICE.txt.

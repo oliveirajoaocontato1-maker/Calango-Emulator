@@ -1,0 +1,2 @@
+Esta pasta guarda as configuracoes, os saves e os shaders do Calango Emulator.
+Nao apague se quiser manter seu progresso.

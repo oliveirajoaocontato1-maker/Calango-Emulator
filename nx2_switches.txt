@@ -1,0 +1,140 @@
+# Switch NX2 - read when the Calango Emulator GUI starts.
+# One NAME=VALUE per line. Lines starting with # are ignored.
+# A variable already set in the environment wins over this file.
+# Between files, the user copy (%APPDATA%\calango\nx2_switches.txt, or
+# $XDG_CONFIG_HOME/calango/nx2_switches.txt) wins over this one, so editing this file is never
+# needed: copy the lines you want into your own and restart.
+# Beside-application files accept EDEN_NX2_* and the emulator's diagnostic switches only.
+# Host environment settings, including library paths such as EDEN_STREAMLINE_DIR, must be
+# set in the real environment or the user configuration file at an absolute config location.
+#
+# Restart the emulator after editing.
+
+# --- Performance tuning defaults for Switch 2 ---
+# Offload GPU method/macro execution to the back thread (SPLIT=2 delivers up to +54% FPS alone).
+EDEN_NX2_SPLIT=2
+
+# Batch GPU fence syncpoints to reduce host driver overhead and smooth frametimes.
+EDEN_NX2_FENCE_BATCH=1
+
+# Leave buffer downloads disabled on Switch 2 (default): forcing downloads (=1) copies back
+# 90-220 MB/s of buffers CPU never touches, causing heavy mutex contention and dropping FPS by ~38-63%.
+#EDEN_NX2_BUFFER_DOWNLOADS=1
+
+# Which fence the game waits for when it presents. 1 = the previous frame's: the game prepares the
+# next frame while the GPU finishes this one, and waits for this one too while the GPU is behind.
+# 0 = this frame's: no overlap. Any value other than 1 means 0, so =2 does not run two frames ahead.
+# Unset: per title. Ocarina of Time uses 1, Donkey Kong Bananza 0, and other titles wait for this
+# frame unless a GPU channel waits on a semaphore the game releases after the present.
+# Ocarina of Time with =0 (or =2): 30.9 fps against 38.9 unset, same spot and settings.
+#EDEN_NX2_FRAMES_AHEAD=1
+
+# --- Workarounds / Debug ---
+# Terrain/indirect drawing fix for Donkey Kong Bananza: enabled by default. Set to 0 only to leave to GPU.
+#EDEN_NX2_RESETFIX=0
+
+# Drop reactive-flushing read traps on Switch 2 programs (opt-in; can reduce FPS from 29 to 24 in MKW).
+#EDEN_NX2_NO_REACTIVE=1
+
+# Switch 2 semaphore mirror (new in build 11, from Lichii): copies GPU queue progress into the
+# page the GPU waits on; fixes freezes and black screens after cutscenes. =0 turns it off as in
+# build 10, to test whether it causes a problem (for example wrong, too-bright lighting).
+#EDEN_NX2_SEM_MIRROR=0
+
+# New in build 11: while a shader the game needs for the first time is built, its draws into
+# targets used every frame are left out for a few frames instead of freezing the picture (before,
+# only targets the game clears every frame). =0 brings the old rule back, to test whether
+# something stays missing or wrong after walking into a new area.
+#EDEN_NX2_TRANSIENT_TARGETS=0
+
+# GPU hang or reset on AMD, or a black screen after the opening cutscene on a handheld: the mesh
+# shader fallback fixes it. Build 11 uses it by itself on Linux (RADV) with any AMD GPU and on
+# integrated Radeons on Windows; =1 forces it anywhere (try it on a desktop Radeon on Windows that
+# hangs; the first boot then builds shaders for a while), =0 never uses it.
+#EDEN_NX2_FORCE_MESH_FALLBACK=1
+
+# Build 12, Linux and macOS: AMD FSR runs through the FSR 3.1 built into Calango Emulator (AMD's own
+# runtime is Windows only). =1 uses the built-in one on Windows too, to compare the two.
+#EDEN_NX2_FSR_BUILTIN=1
+
+# Build 12 fixed ghosting on Link's arms and legs with FSR and frame generation (the motion of
+# his limbs was built from the wrong number of bones). =0 brings the old motion back, to compare.
+#EDEN_NX2_OOT_INFLUENCES=0
+
+# Build 12 cleans up idle buffers only. =1 brings the old rule back (it ran on every frame in
+# Ocarina of Time and caused hitching); only to compare.
+#EDEN_NX2_BUFFER_GC_TOTAL=1
+
+# A GPU without mesh shaders (Apple, older cards) draws grass and props through compute shaders
+# since build 9. If the game freezes while loading a save on such a GPU, =0 leaves those draws
+# out instead (the grass and props are missing), as builds up to 8 did.
+#EDEN_NX2_MESH_EMULATION=0
+
+# Build 12 marks the depth buffer as changed only by draws that can write to it (far fewer image
+# copies with FSR Quality and Balanced). =1 brings the old rule back, if something that depends
+# on depth (water, particles, decals) looks wrong.
+#EDEN_NX2_DEPTH_ALWAYS_MODIFIED=1
+
+# Build 12 keeps textures used in the last 300 frames when video memory is nearly full, instead of
+# deleting textures still on screen and making them again a moment later (whole sessions of
+# hitching). =0 brings the old rule back; only to compare.
+#EDEN_NX2_TC_MIN_AGE=0
+
+# Build 12, AMD with ASTC recompression on BC1 or BC3: textures whose smallest mip levels AMD's
+# driver draws wrong keep BC with those few tiny levels left out, instead of turning uncompressed
+# (0.6 to 0.9 GB less video memory in Ocarina). =0 brings the old rule back, if distant ground
+# shows dark lines.
+#EDEN_NX2_BC_TAIL_TRIM=0
+
+# Build 12: Skip on the "Building shaders" screen starts the game, and the rest keeps building
+# while you play on one thread, paused while the game builds its own shaders. =0 stops at Skip
+# instead, as before; =2 builds on two threads (faster, but costs more frame rate meanwhile).
+#EDEN_NX2_PRECACHE_AFTER_SKIP=0
+
+# Experimental and off: Calango Emulator's own memory heaps for the AMD driver's shader compiler (faster
+# first-time shader builds in tests). The test PC froze twice with it on; whether it was the cause
+# is not known. Leave it off unless you are asked to test it.
+#EDEN_NX2_VK_ALLOCATOR=1
+
+# A test for the white flashes: checks whether a compute shader writes further than the emulator
+# tracks, and tracks exactly what it wrote if so. It found nothing so far. The log says "Compute
+# write extent too small" if it does.
+#EDEN_NX2_EXTENT_CHECK=1
+
+# A white flash ("flashbang")? Set a folder here, play until it happens, then send that folder and
+# the log: every frame's passes are measured and the flash is traced to the pass that caused it.
+# Costs some speed, so leave it off otherwise.
+#EDEN_NX2_FLASH_WATCH=C:\calango-flash
+
+# FSR camera jitter for Ocarina of Time (new, being tested): FSR rebuilds fine detail from a camera
+# nudged by less than a pixel every frame. Sharper, less blocky FSR, most at low presets. Remove
+# the # to try it; put it back if the picture shakes.
+#EDEN_NX2_OOT_JITTER=1
+
+# FSR 3.1 instead of FSR 4 for the upscaler: much lighter on RX 6000/7000 (FSR 4 is built for RX
+# 9000), a little softer and ghosts more. Remove the # to use it.
+EDEN_NX2_FSR_VERSION=3
+
+# FSR 4 output check: when FSR 4 draws black (AMD driver 2.0.406 on RX 9000), Calango Emulator switches to
+# FSR 3.1. =0 keeps FSR 4 regardless (if it switched while your picture looked fine).
+#EDEN_NX2_FSR4_CHECK=0
+
+#EDEN_NX2_MME_JIT=0
+#EDEN_NX2_PBFLUSH=0
+#EDEN_NX2_SKIP_SAME=0
+#EDEN_NX2_INLINE_DEFER=0
+#EDEN_NX2_SPLIT_SKIP=1
+#EDEN_NX2_AUTO_STUB=1
+
+# --- Calango Emulator (see CALANGO.md) ---
+# Grid lines on distant terrain on AMD: remove the # below to keep ASTC textures as RGBA8 instead
+# of re-compressing them to BC3 (zortos293/Lichii#448). Uses more video memory.
+#EDEN_NX2_KEEP_ASTC=1
+
+# Build every shader of the game's shader cache at boot. Run once with this on to compile and save
+# all of them (compiled shaders are kept on disk), then put the # back, or leave it on to build
+# everything at every boot (fast once saved, but uses a lot of RAM).
+#EDEN_NX2_PRELOAD_ALL_PIPELINES=1
+
+# Calango: frame generation built into the emulator (AMD runtime frame generation crashes the RX 6600 driver)
+EDEN_NX2_FFX_FG=1

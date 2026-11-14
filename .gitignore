@@ -1,0 +1,4 @@
+user/*
+!user/LEIA-ME.txt
+*.log
+*.dmp
