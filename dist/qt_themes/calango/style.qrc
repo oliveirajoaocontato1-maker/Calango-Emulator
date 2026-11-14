@@ -1,0 +1,14 @@
+<!--
+SPDX-FileCopyrightText: 2026 CheezyEmu contributors
+SPDX-License-Identifier: GPL-3.0-or-later
+-->
+
+<RCC>
+    <qresource prefix="icons/calango">
+        <file alias="index.theme">icons/index.theme</file>
+    </qresource>
+    <qresource prefix="calango">
+        <file>style.qss</file>
+        <file>fonts/Inter.ttf</file>
+    </qresource>
+</RCC>

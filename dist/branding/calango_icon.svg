@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Calango Emulator: a calango (Tropidurus lizard) seen from above, on a basalt badge. -->
+  <defs>
+    <linearGradient id="badge" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1D2923"/>
+      <stop offset="1" stop-color="#0D1310"/>
+    </linearGradient>
+    <linearGradient id="skin" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#7BE3AE"/>
+      <stop offset="0.55" stop-color="#3FBF7F"/>
+      <stop offset="1" stop-color="#23895A"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.42" r="0.55">
+      <stop offset="0" stop-color="#3FBF7F" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#3FBF7F" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect x="24" y="24" width="464" height="464" rx="108" fill="url(#badge)"/>
+  <rect x="24" y="24" width="464" height="464" rx="108" fill="url(#glow)"/>
+  <rect x="25.5" y="25.5" width="461" height="461" rx="106.5" fill="none" stroke="#3FBF7F" stroke-opacity="0.35" stroke-width="3"/>
+
+  <g transform="translate(256 262) rotate(-28) translate(-256 -262)">
+    <!-- legs -->
+    <g fill="none" stroke="url(#skin)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M232 196 L190 186 L174 150"/>
+      <path d="M280 196 L322 186 L338 150"/>
+      <path d="M234 292 L188 306 L176 346"/>
+      <path d="M278 292 L324 306 L336 346"/>
+    </g>
+    <g fill="none" stroke="#5FD497" stroke-width="6" stroke-linecap="round">
+      <path d="M174 150 L160 140 M174 150 L168 132 M174 150 L182 134"/>
+      <path d="M338 150 L352 140 M338 150 L344 132 M338 150 L330 134"/>
+      <path d="M176 346 L160 352 M176 346 L166 362 M176 346 L182 364"/>
+      <path d="M336 346 L352 352 M336 346 L346 362 M336 346 L330 364"/>
+    </g>
+    <!-- tail -->
+    <path d="M246 322 C 240 372 256 408 298 428 C 330 444 350 458 358 486 C 362 452 342 430 306 410 C 274 392 264 364 266 322 Z" fill="url(#skin)"/>
+    <!-- body -->
+    <path d="M256 152 C 282 160 293 200 292 242 C 291 288 279 326 256 340 C 233 326 221 288 220 242 C 219 200 230 160 256 152 Z" fill="url(#skin)"/>
+    <!-- head -->
+    <path d="M256 62 C 268 64 287 94 290 126 C 292 150 277 168 256 171 C 235 168 220 150 222 126 C 225 94 244 64 256 62 Z" fill="url(#skin)"/>
+    <!-- eyes -->
+    <ellipse cx="235" cy="118" rx="4" ry="5.5" fill="#0D1310"/>
+    <ellipse cx="277" cy="118" rx="4" ry="5.5" fill="#0D1310"/>
+    <!-- dorsal scales -->
+    <g fill="#0D1310" fill-opacity="0.28">
+      <path d="M256 200 l9 9 l-9 9 l-9 -9 Z"/>
+      <path d="M256 228 l9 9 l-9 9 l-9 -9 Z"/>
+      <path d="M256 256 l9 9 l-9 9 l-9 -9 Z"/>
+      <path d="M256 284 l8 8 l-8 8 l-8 -8 Z"/>
+      <path d="M256 310 l7 7 l-7 7 l-7 -7 Z"/>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,305 @@
+// SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+// SPDX-FileCopyrightText: 2016 Citra Emulator Project
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+#pragma once
+
+#include <array>
+#include <atomic>
+#include <vector>
+#include <QByteArray>
+#include <QMetaType>
+#include <QString>
+#include <QStringList>
+#include <QVector>
+#include <qdir.h>
+#include "common/common_types.h"
+#include "common/settings.h"
+#include "common/settings_enums.h"
+#include "qt_common/config/qt_config.h"
+
+using Settings::Category;
+using Settings::ConfirmStop;
+using Settings::Setting;
+using Settings::SwitchableSetting;
+
+#ifndef CANNOT_EXPLICITLY_INSTANTIATE
+namespace Settings {
+extern template class Setting<bool>;
+extern template class Setting<std::string>;
+extern template class Setting<u16, true>;
+extern template class Setting<u32>;
+extern template class Setting<u8, true>;
+extern template class Setting<u8>;
+extern template class Setting<unsigned long long>;
+} // namespace Settings
+#endif
+
+namespace UISettings {
+
+bool IsDarkTheme();
+
+struct ContextualShortcut {
+    std::string keyseq;
+    std::string controller_keyseq;
+    int context;
+    bool repeat;
+};
+
+struct Shortcut {
+    std::string name;
+    std::string group;
+    ContextualShortcut shortcut;
+};
+
+enum class Theme {
+    Default,
+    DefaultColorful,
+    Dark,
+    DarkColorful,
+    MidnightBlue,
+    MidnightBlueColorful,
+    Calango,
+};
+
+// Calango Emulator's own theme everywhere (jade on basalt).
+static constexpr Theme default_theme{Theme::Calango};
+
+using Themes = std::array<std::pair<const char*, const char*>, 7>;
+extern const Themes themes;
+
+struct GameDir {
+    std::string path;
+    bool deep_scan = false;
+    bool expanded = false;
+    bool operator==(const GameDir& rhs) const {
+        return path == rhs.path;
+    }
+    bool operator!=(const GameDir& rhs) const {
+        return !operator==(rhs);
+    }
+};
+
+struct Values {
+    Settings::Linkage linkage{1000};
+
+    QByteArray geometry;
+    QByteArray state;
+
+    QByteArray renderwindow_geometry;
+
+    QByteArray gamelist_header_state;
+
+    Setting<bool> single_window_mode{linkage, true, "singleWindowMode", Category::Ui};
+    Setting<bool> fullscreen{linkage, false, "fullscreen", Category::Ui};
+    Setting<bool> show_filter_bar{linkage, true, "showFilterBar", Category::Ui};
+    Setting<bool> show_status_bar{linkage, true, "showStatusBar", Category::Ui};
+
+    SwitchableSetting<ConfirmStop> confirm_before_stopping{linkage,
+                                                           ConfirmStop::Ask_Always,
+                                                           "confirmStop",
+                                                           Category::UiGeneral,
+                                                           Settings::Specialization::Default,
+                                                           true,
+                                                           true};
+
+    Setting<bool> first_start{linkage, true, "firstStart", Category::Ui};
+    Setting<bool> pause_when_in_background{linkage,
+                                           false,
+                                           "pauseWhenInBackground",
+                                           Category::UiGeneral,
+                                           Settings::Specialization::Default,
+                                           true,
+                                           true};
+    Setting<bool> mute_when_in_background{linkage,
+                                          false,
+                                          "muteWhenInBackground",
+                                          Category::UiAudio,
+                                          Settings::Specialization::Default,
+                                          true,
+                                          true};
+    Setting<bool> hide_mouse{
+        linkage, true, "hideInactiveMouse", Category::UiGeneral, Settings::Specialization::Default,
+        true,    true};
+    // Set when Vulkan is known to crash the application
+    bool has_broken_vulkan = false;
+
+    Setting<bool> select_user_on_boot{linkage,
+                                      false,
+                                      "select_user_on_boot",
+                                      Category::UiGeneral,
+                                      Settings::Specialization::Default,
+                                      true,
+                                      true};
+
+    Setting<bool> check_for_updates{linkage, true, "check_for_updates", Category::UiGeneral};
+    // Release tag the user chose to skip, and the epoch second before which updates stay quiet.
+    Setting<std::string> skipped_update_tag{linkage, {}, "skipped_update_tag", Category::Ui};
+    /// The release build (build-N) last started: a different one means an update was installed,
+    /// and its "What's new" is shown once.
+    Setting<std::string> last_seen_build{linkage, {}, "last_seen_build", Category::Ui};
+    Setting<unsigned long long> update_remind_at{linkage, 0, "update_remind_at", Category::Ui};
+
+    // Linux/MinGW may support (requires libdl support)
+    SwitchableSetting<bool> enable_gamemode{linkage,
+#ifndef _MSC_VER
+                                            true,
+#else
+                                            false,
+#endif
+                                            "enable_gamemode", Category::UiGeneral};
+#ifdef __unix__
+    SwitchableSetting<bool> gui_force_x11{linkage, false, "gui_force_x11", Category::UiGeneral};
+    Setting<bool> gui_hide_backend_warning{linkage, false, "gui_hide_backend_warning",
+                                           Category::UiGeneral};
+#endif
+
+    // Discord RPC
+    Setting<bool> enable_discord_presence{linkage, true, "enable_discord_presence", Category::Ui};
+
+    // Menu sounds (yuzu/util/menu_sounds.cpp): the click and start chime, the home screen hum
+    // and their volume.
+    Setting<bool> menu_sounds{linkage, true, "menu_sounds", Category::Ui};
+    Setting<bool> menu_ambient{linkage, true, "menu_ambient", Category::Ui};
+    /// The picked game's own title music (from the player's copy) on the home screen and
+    /// while it loads.
+    Setting<bool> menu_game_music{linkage, true, "menu_game_music", Category::Ui};
+    /// That music: random songs from the game's soundtrack (true), or its title theme.
+    Setting<bool> menu_music_random{linkage, true, "menu_music_random", Category::Ui};
+    Setting<u32, true> menu_sound_volume{linkage, 60, 0, 100, "menu_sound_volume", Category::Ui};
+    /// The home screen's speaker button: every menu sound silent (music, hum, clicks, chime).
+    Setting<bool> menu_muted{linkage, false, "menu_muted", Category::Ui};
+
+    // logging
+    Setting<bool> show_console{linkage, false, "showConsole", Category::Ui};
+
+    // Screenshots
+    Setting<bool> enable_screenshot_save_as{linkage, true, "enable_screenshot_save_as",
+                                            Category::Screenshots};
+    Setting<u32> screenshot_height{linkage, 0, "screenshot_height", Category::Screenshots};
+
+    std::string roms_path;
+    std::string game_dir_deprecated;
+    bool game_dir_deprecated_deepscan;
+    QVector<GameDir> game_dirs;
+    QStringList recent_files;
+    Setting<std::string> language{linkage, {}, "language", Category::Paths};
+
+    // Optional key that enables the SteamGridDB icon fallback
+    Setting<std::string> steamgriddb_api_key{linkage, {}, "steamgriddb_api_key", Category::Ui};
+    // Look up pictures online for listed games that have none (SteamGridDB with a key).
+    Setting<bool> auto_game_pictures{linkage, true, "auto_game_pictures", Category::Ui};
+
+    std::string theme;
+
+    // Shortcut name <Shortcut, context>
+    std::vector<Shortcut> shortcuts;
+
+    Setting<u32> callout_flags{linkage, 0, "calloutFlags", Category::Ui};
+
+    // multiplayer settings
+    Setting<std::string> multiplayer_nickname{linkage, {}, "nickname", Category::Multiplayer};
+    Setting<std::string> multiplayer_filter_text{linkage, {}, "filter_text", Category::Multiplayer};
+    Setting<bool> multiplayer_filter_games_owned{linkage, false, "filter_games_owned",
+                                                 Category::Multiplayer};
+    Setting<bool> multiplayer_filter_hide_empty{linkage, false, "filter_games_hide_empty",
+                                                Category::Multiplayer};
+    Setting<bool> multiplayer_filter_hide_full{linkage, false, "filter_games_hide_full",
+                                               Category::Multiplayer};
+    Setting<std::string> multiplayer_ip{linkage, {}, "ip", Category::Multiplayer};
+    Setting<u16, true> multiplayer_port{linkage,    24872,  0,
+                                        UINT16_MAX, "port", Category::Multiplayer};
+    Setting<std::string> multiplayer_room_nickname{
+        linkage, {}, "room_nickname", Category::Multiplayer};
+    Setting<std::string> multiplayer_room_name{linkage, {}, "room_name", Category::Multiplayer};
+    Setting<u8, true> multiplayer_max_player{linkage, 8, 0, 8, "max_player", Category::Multiplayer};
+    Setting<u16, true> multiplayer_room_port{linkage,    24872,       0,
+                                             UINT16_MAX, "room_port", Category::Multiplayer};
+    Setting<u8, true> multiplayer_host_type{linkage, 0, 0, 1, "host_type", Category::Multiplayer};
+    Setting<unsigned long long> multiplayer_game_id{linkage, {}, "game_id", Category::Multiplayer};
+    Setting<std::string> multiplayer_room_description{
+        linkage, {}, "room_description", Category::Multiplayer};
+    std::pair<std::vector<std::string>, std::vector<std::string>> multiplayer_ban_list;
+
+    // Game List
+    Setting<bool> show_add_ons{linkage, true, "show_add_ons", Category::UiGameList};
+    Setting<u32, true> game_icon_size{linkage, 64, 0, 512, "game_icon_size", Category::UiGameList};
+    Setting<u32, true> folder_icon_size{linkage, 48, 8, 512, "folder_icon_size", Category::UiGameList};
+    Setting<u8> row_1_text_id{linkage, 3, "row_1_text_id", Category::UiGameList};
+    Setting<u8> row_2_text_id{linkage, 2, "row_2_text_id", Category::UiGameList};
+    Setting<Settings::GameListMode> game_list_mode{linkage, Settings::GameListMode::CarouselView, "game_list_mode", Category::UiGameList};
+    Setting<bool> show_game_name{linkage, true, "show_game_name", Category::UiGameList};
+    /// The status bar shows build 11's graphics buttons and the FSR sizes (its DETAILS toggle).
+    Setting<bool> show_status_details{linkage, false, "show_status_details", Category::Ui};
+    /// Customize menu (yuzu/util/calango_theme.h): the Calango Emulator theme's accent and background
+    /// colours (#rrggbb; empty is the theme's own) and button shape (0 pill, 1 soft, 2 square).
+    Setting<std::string> theme_accent{linkage, std::string{}, "theme_accent", Category::Ui};
+    Setting<std::string> theme_background{linkage, std::string{}, "theme_background", Category::Ui};
+    Setting<u32> theme_shape{linkage, 1, "theme_shape", Category::Ui};
+    /// The home view's tile size, in percent of the size that suits the window (its slider).
+    Setting<u32, true> home_tile_scale{linkage, 100, 60, 160, "home_tile_scale", Category::UiGameList};
+
+    std::atomic_bool is_game_list_reload_pending{false};
+    Setting<bool> cache_game_list{linkage, true, "cache_game_list", Category::UiGameList};
+    Setting<bool> favorites_expanded{linkage, true, "favorites_expanded", Category::UiGameList};
+    QVector<u64> favorited_ids;
+    QMap<u64, QDir> ryujinx_link_paths;
+
+    // perf overlay
+    Setting<bool> show_perf_overlay{linkage, false, "show_perf_overlay", Category::UiGameList};
+    // Where the performance bar sits (0-5: top left, top centre, top right, bottom left, bottom
+    // centre, bottom right; 6: where it was dragged, as thousandths of the free room) and which
+    // of its parts show.
+    Setting<int> perf_overlay_anchor{linkage, 0, "perf_overlay_anchor", Category::UiGameList};
+    Setting<int> perf_overlay_x{linkage, 0, "perf_overlay_x", Category::UiGameList};
+    Setting<int> perf_overlay_y{linkage, 0, "perf_overlay_y", Category::UiGameList};
+    Setting<bool> perf_overlay_compact{linkage, false, "perf_overlay_compact",
+                                       Category::UiGameList};
+    Setting<bool> perf_overlay_graph{linkage, true, "perf_overlay_graph", Category::UiGameList};
+    Setting<bool> perf_overlay_memory{linkage, true, "perf_overlay_memory", Category::UiGameList};
+    Setting<int> perf_overlay_opacity{linkage, 85, "perf_overlay_opacity", Category::UiGameList};
+
+    // Size & File Types Column
+    Setting<bool> show_size{linkage, true, "show_size", Category::UiGameList};
+    Setting<bool> show_types{linkage, true, "show_types", Category::UiGameList};
+
+    // Play time
+    Setting<bool> show_play_time{linkage, true, "show_play_time", Category::UiGameList};
+
+    // misc
+    Setting<bool> show_fw_warning{linkage, true, "show_fw_warning", Category::Miscellaneous};
+
+    bool configuration_applied;
+    bool reset_to_defaults;
+    bool shortcut_already_warned{false};
+};
+
+extern Values values;
+
+u32 CalculateWidth(u32 height, Settings::AspectRatio ratio);
+
+void SaveWindowState();
+void RestoreWindowState(std::unique_ptr<QtConfig>& qtConfig);
+
+// sync with uisettings.cpp
+extern const std::array<Shortcut, 33> default_hotkeys;
+
+} // namespace UISettings
+
+Q_DECLARE_METATYPE(UISettings::GameDir*);
+
+// These metatype declarations cannot be in common/settings.h because core is devoid of QT
+Q_DECLARE_METATYPE(Settings::CpuAccuracy);
+Q_DECLARE_METATYPE(Settings::GpuAccuracy);
+Q_DECLARE_METATYPE(Settings::DmaAccuracy);
+Q_DECLARE_METATYPE(Settings::FullscreenMode);
+Q_DECLARE_METATYPE(Settings::NvdecEmulation);
+Q_DECLARE_METATYPE(Settings::ResolutionSetup);
+Q_DECLARE_METATYPE(Settings::ScalingFilter);
+Q_DECLARE_METATYPE(Settings::AntiAliasing);
+Q_DECLARE_METATYPE(Settings::RendererBackend);
+Q_DECLARE_METATYPE(Settings::AstcRecompression);
+Q_DECLARE_METATYPE(Settings::AstcDecodeMode);
+Q_DECLARE_METATYPE(Settings::SpirvOptimizeMode);

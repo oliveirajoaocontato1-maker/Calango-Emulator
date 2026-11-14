@@ -1,0 +1,89 @@
+// SPDX-FileCopyrightText: 2026 CheezyEmu contributors
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+#pragma once
+
+#include <condition_variable>
+#include <functional>
+#include <memory>
+#include <mutex>
+#include <optional>
+#include <string>
+#include <thread>
+
+#include <QObject>
+#include <QTimer>
+
+#include "common/common_types.h"
+#include "common/polyfill_thread.h"
+
+struct SDL_AudioStream;
+
+/// Menu sounds (menu_sounds.cpp): a soft click when the picked game changes, a chime when a game
+/// starts, and a quiet ambient hum on the home screen. All three are made in code (no sound
+/// files) and played through SDL, so they sound the same on Windows, Linux and macOS.
+///
+/// Settings (Configure > Interface > Sounds): menu_sounds, menu_ambient, menu_sound_volume.
+/// CALANGO_SOUND_DUMP=<folder> writes click.wav, chime.wav and hum.wav there instead of
+/// playing anything (to listen to them or tune them).
+class MenuSounds : public QObject {
+    Q_OBJECT
+
+public:
+    /// `ambient_wanted` says whether the home screen is showing (no game running); the hum
+    /// plays while it is, the window is in front and the setting is on.
+    /// `music_wanted`: the picked game's music may play (the home screen, or the game loading).
+    explicit MenuSounds(std::function<bool()> ambient_wanted, std::function<bool()> music_wanted,
+                        QObject* parent);
+    ~MenuSounds() override;
+
+    /// The click for a newly picked game. `volume` (0 to 100) overrides the setting (preview).
+    static void Click(int volume = -1);
+    /// The chime for starting a game.
+    static void Chime();
+    /// The game now picked in the game list: its music (a random song from its soundtrack, or
+    /// its title theme; read from its files on another thread) fades in a moment later,
+    /// crossfading from the last game's. While it stays picked, each song that ends crossfades
+    /// into another random one.
+    static void SelectGame(const std::string& path, u64 program_id);
+    /// A game is starting (from the list, the command line, a shortcut...): its music plays
+    /// through the loading screen. Already playing (picked in the list): it just goes on.
+    static void StartGame(const std::string& path, u64 program_id);
+
+private:
+    void Tick();
+    void Wake();
+
+    void LoadSelectedMusic();
+    /// Loads the playing game's music on music_worker: `queued` for the song after this one.
+    void RequestMusic(bool queued);
+    void MusicWorker(std::stop_token stop);
+
+    std::function<bool()> ambient_wanted;
+    std::function<bool()> music_wanted;
+    QTimer timer;
+    QTimer music_timer; ///< A short wait after a pick, so scrolling past games loads nothing
+    std::string selected_path;
+    u64 selected_program_id = 0;
+    std::string playing_path;
+    u64 playing_program_id = 0;
+    u64 sounding_program_id = 0;  ///< The game whose music the sound now has
+    bool music_available = false; ///< The playing game has a track
+    SDL_AudioStream* stream = nullptr;
+    bool paused = false;
+    int silent_ticks = 0;
+
+    /// What music_worker loads next (only the newest request; older ones are dropped).
+    struct MusicRequest {
+        std::string path;
+        u64 program_id{};
+        bool random{};
+        bool queued{};
+        u64 serial{};
+    };
+    std::mutex request_mutex;
+    std::condition_variable_any request_ready;
+    std::optional<MusicRequest> request;
+    u64 request_serial = 0; ///< UI thread: a result from an older request is dropped
+    std::jthread music_worker; ///< Last, so it stops before the rest goes
+};
